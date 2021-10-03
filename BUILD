@@ -12,6 +12,8 @@ envoy_cc_binary(
     repository = "@envoy",
     deps = [
         ":echo2_config",
+        "//http-filter-example:http_filter_config",
+        "//http-filter-demo:demo_filter_config",
         "@envoy//source/exe:envoy_main_entry_lib",
     ],
 )

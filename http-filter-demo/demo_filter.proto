@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package demo;
+
+import "validate/validate.proto";
+
+message DemoProp {
+    string cluster = 1 [(validate.rules).string.min_bytes = 1];
+    bool enable = 2;
+}

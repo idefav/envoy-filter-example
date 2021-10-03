@@ -19,8 +19,9 @@ void DemoFilter::onDestroy(){}
 
 // decode stream filter
 FilterHeadersStatus DemoFilter::decodeHeaders(RequestHeaderMap&, bool) {
-    ENVOY_LOG(trace,"Cluster: "+ cluster().get() + "enable: "+ (this->enable()?"ture":"false"));
-    return FilterHeadersStatus::Continue;
+    ENVOY_LOG(trace,"Cluster: "+ cluster().get() + "enable: "+ (this->enable()?"true":"false"));
+    decoder_callbacks_->sendLocalReply(Http::Code::TooManyRequests,"demo filter resp",nullptr,absl::nullopt,"to many req");
+    return FilterHeadersStatus::StopIteration;
 };
 FilterDataStatus DemoFilter::decodeData(Buffer::Instance&, bool) {
     return FilterDataStatus::Continue;

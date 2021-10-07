@@ -1,3 +1,5 @@
+#pragma once
+
 #include <string>
 #include <sstream>
 
@@ -14,39 +16,26 @@ private:
   T value_;
 
 public:
-  WindowWrap(long windowLengthInMs, long windowStart, T value)
+  WindowWrap() = default;
+  WindowWrap(const long windowLengthInMs, long windowStart, T value)
       : windowLengthInMs_(windowLengthInMs), windowStart_(windowStart), value_(value){};
-  ~WindowWrap();
+  WindowWrap(const long windowLengthInMs, long windowStart)
+      : windowLengthInMs_(windowLengthInMs), windowStart_(windowStart){};
+  // ~WindowWrap();
+
+  WindowWrap(const WindowWrap<T>& wrap)
+      : windowLengthInMs_(wrap.windowLengthInMs_), windowStart_(wrap.windowStart_),
+        value_(wrap.value_) {}
 
   long windowLength();
   long windowStart();
-  T value();
+  T& value();
   void setValue(T v);
-  WindowWrap<T> resetTo(long startTime);
+  WindowWrap<T>& resetTo(long startTime);
   bool isTimeInWindow(long timeMillis);
   string toString();
 };
 
-template <typename T> WindowWrap<T>::~WindowWrap() {}
-
-template <typename T> long WindowWrap<T>::windowLength() { return windowLengthInMs_; }
-template <typename T> long WindowWrap<T>::windowStart() { return windowStart_; }
-template <typename T> T WindowWrap<T>::value() { return value_; }
-template <typename T> void WindowWrap<T>::setValue(T v) { value_ = v; }
-template <typename T> WindowWrap<T> WindowWrap<T>::resetTo(long startTime) {
-  windowStart_ = startTime;
-  return this;
-}
-template <typename T> bool WindowWrap<T>::isTimeInWindow(long timeMillis) {
-  return windowStart_ <= timeMillis && timeMillis < windowStart_ + windowLengthInMs_;
-}
-template <typename T> string WindowWrap<T>::toString() {
-  ostringstream result;
-  result << "WindowWrap{"
-         << "windowLengthInMs=" << windowLengthInMs_ << ", windowStart=" << windowStart_
-         << ", value=" << value_ << "}";
-  return result.str();
-}
 
 } // namespace Http
 } // namespace Envoy

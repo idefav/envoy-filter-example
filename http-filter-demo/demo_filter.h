@@ -1,4 +1,5 @@
 #pragma once
+
 #include <string>
 
 #include "http-filter-demo/demo_filter.pb.h"
@@ -6,9 +7,11 @@
 #include "source/common/common/logger.h"
 #include "envoy/local_info/local_info.h"
 
+#include "stastic_node.h"
+
 namespace Envoy {
 namespace Http {
-
+static thread_local long start_time = 0L;
 class DemoConfig {
 public:
   DemoConfig(const demo::DemoProp& proto_config, const LocalInfo::LocalInfo& local_info);
@@ -17,7 +20,7 @@ public:
 
   bool getEnable() const { return enable_; }
 
-  const LocalInfo::LocalInfo& localInfo() const {return local_info_;}
+  const LocalInfo::LocalInfo& localInfo() const { return local_info_; }
 
 private:
   const std::string cluster_;
@@ -28,12 +31,13 @@ private:
 using DemoFilterShardConfigPtr = std::shared_ptr<DemoConfig>;
 
 class DemoFilter : public StreamFilter,
-                   Envoy::Http::PassThroughDecoderFilter,
-                   Envoy::Http::PassThroughEncoderFilter,
+                   PassThroughDecoderFilter,
+                   PassThroughEncoderFilter,
                    Logger::Loggable<Logger::Id::filter> {
+
 public:
-  DemoFilter(DemoFilterShardConfigPtr);
-  ~DemoFilter();
+  DemoFilter(DemoFilterShardConfigPtr config) : config_(config) { node_ = new StasticNode(); };
+  ~DemoFilter() { delete node_; };
 
   // Http::StreamFilterBase
   void onDestroy() override;
@@ -49,6 +53,7 @@ public:
 
 private:
   const DemoFilterShardConfigPtr config_;
+  const StasticNode* node_;
   StreamDecoderFilterCallbacks* decoder_callbacks_;
   StreamEncoderFilterCallbacks* encoder_callbacks_;
 

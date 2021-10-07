@@ -21,14 +21,33 @@ api_proto_package()
 
 envoy_cc_library(
     name = "demo_filter_lib",
-    srcs = ["demo_filter.cc"],
-    hdrs = ["demo_filter.h"],
+    srcs = [
+        "array_metric.cc",
+        "bucket_leap_array.cc",
+        "demo_filter.cc",
+        "leap_array.cc",
+        "metric_bucket.cc",
+        "stastic_node.cc",
+        "window_wrap.cc",
+    ],
+    hdrs = [
+        "array_metric.h",
+        "bucket_leap_array.h",
+        "demo_filter.h",
+        "leap_array.h",
+        "metric.h",
+        "metric_bucket.h",
+        "metric_event.h",
+        "node.h",
+        "stastic_node.h",
+        "window_wrap.h",
+    ],
     repository = "@envoy",
     deps = [
         ":pkg_cc_proto",
-        "@envoy//source/extensions/filters/http/common:pass_through_filter_lib",
-        "@envoy//source/extensions/filters/http/common:factory_base_lib",
         "@envoy//source/common/common:logger_lib",
+        "@envoy//source/extensions/filters/http/common:factory_base_lib",
+        "@envoy//source/extensions/filters/http/common:pass_through_filter_lib",
     ],
 )
 

@@ -1,1 +1,2 @@
 import %workspace%/envoy/.bazelrc
+--cxxopt='-std=c++11'

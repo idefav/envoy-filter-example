@@ -6,8 +6,9 @@
 #include "source/extensions/filters/http/common/pass_through_filter.h"
 #include "source/common/common/logger.h"
 #include "envoy/local_info/local_info.h"
-
 #include "stastic_node.h"
+
+// #include "stastic_node.h"
 
 namespace Envoy {
 namespace Http {
@@ -36,8 +37,8 @@ class DemoFilter : public StreamFilter,
                    Logger::Loggable<Logger::Id::filter> {
 
 public:
-  DemoFilter(DemoFilterShardConfigPtr config) : config_(config) { node_ = new StasticNode(); };
-  ~DemoFilter() { delete node_; };
+  DemoFilter(DemoFilterShardConfigPtr config) : config_(config), node_(StasticNode()){};
+  ~DemoFilter(){};
 
   // Http::StreamFilterBase
   void onDestroy() override;
@@ -53,7 +54,7 @@ public:
 
 private:
   const DemoFilterShardConfigPtr config_;
-  const StasticNode* node_;
+  StasticNode node_;
   StreamDecoderFilterCallbacks* decoder_callbacks_;
   StreamEncoderFilterCallbacks* encoder_callbacks_;
 

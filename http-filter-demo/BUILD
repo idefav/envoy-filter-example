@@ -25,10 +25,8 @@ envoy_cc_library(
         "array_metric.cc",
         "bucket_leap_array.cc",
         "demo_filter.cc",
-        "leap_array.cc",
         "metric_bucket.cc",
         "stastic_node.cc",
-        "window_wrap.cc",
     ],
     hdrs = [
         "array_metric.h",

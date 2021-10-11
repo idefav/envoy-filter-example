@@ -9,6 +9,7 @@ using std::string;
 using std::chrono::duration_cast;
 using std::chrono::milliseconds;
 using std::chrono::system_clock;
+using namespace std;
 
 using Envoy::Http::DemoConfig;
 
@@ -17,9 +18,7 @@ namespace Http {
 
 // constructor for DemoConfig
 DemoConfig::DemoConfig(const demo::DemoProp& proto_config, const LocalInfo::LocalInfo& local_info)
-    : cluster_(proto_config.cluster()), enable_(proto_config.enable()), local_info_(local_info) {
-      
-    }
+    : cluster_(proto_config.cluster()), enable_(proto_config.enable()), local_info_(local_info) {}
 
 // DemoFilter
 void DemoFilter::onDestroy() {}
@@ -51,6 +50,11 @@ Http::FilterHeadersStatus DemoFilter::encodeHeaders(Http::ResponseHeaderMap&, bo
          << "end time:" << end_time << ","
          << "rt:" << std::to_string(rt);
   ENVOY_LOG(trace, result.str());
+  node_.addPassRequest(1);
+  node_.addRtAndSuccess(rt, 1);
+
+  ENVOY_LOG(trace, string("minRt:") + to_string(node_.minRt()) + string(" avgRt:") +
+                       to_string(long(node_.avgRt())));
   return FilterHeadersStatus::Continue;
 }
 Http::FilterDataStatus DemoFilter::encodeData(Buffer::Instance&, bool) {

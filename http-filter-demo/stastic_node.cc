@@ -1,4 +1,6 @@
-#include <string>
+//
+// Created by 吴子庶 on 2021/10/7.
+//
 
 #include "stastic_node.h"
 
@@ -98,6 +100,12 @@ void StasticNode::increaseExceptionQps(int count) {
 void StasticNode::increaseThreadNum() { curThreadNum_++; }
 
 void StasticNode::decreaseThreadNum() { curThreadNum_--; }
+
+StasticNode::StasticNode(const StasticNode& o) {
+  rollingCounterInSecond_ = o.rollingCounterInSecond_;
+  rollingCounterInMinute_ = o.rollingCounterInMinute_;
+  curThreadNum_.store(o.curThreadNum_.load());
+}
 } // namespace Http
 
 } // namespace Envoy

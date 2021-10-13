@@ -29,8 +29,28 @@ FilterHeadersStatus DemoFilter::decodeHeaders(RequestHeaderMap&, bool) {
             "Cluster: " + cluster().get() + "enable: " + (this->enable() ? "true" : "false"));
   // decoder_callbacks_->sendLocalReply(Http::Code::TooManyRequests,"demo filter
   // resp",nullptr,absl::nullopt,"to many req");
+  std::cout << static_cast<void*>(this) << endl;
   start_time = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+  ENVOY_LOG(info, string("minRt:") + to_string(node_.minRt()) + string(" avgRt:") +
+                      to_string(long(node_.avgRt())) + string(" passQps:") +
+                      to_string(node_.passQps()));
   ENVOY_LOG(trace, "start time:" + std::to_string(start_time));
+  if (node_.passQps() > 1) {
+    ENVOY_LOG(warn, "blocked! passQps:" + to_string(node_.passQps()));
+    return FilterHeadersStatus::StopIteration;
+  }
+  node_.increaseThreadNum();
+  node_.addPassRequest(1);
+  ENVOY_LOG(info, string("flow blocked, maxSuccessQps:") + to_string(node_.maxSuccessQps()) +
+                      string(" currentThreadNum:") + to_string(node_.curThreadNum()) +
+                      string(" minRt:") + to_string(node_.minRt()));
+  if (node_.curThreadNum() > 1 &&
+      node_.curThreadNum() > (node_.maxSuccessQps() * node_.minRt() / 1000)) {
+    ENVOY_LOG(warn, string("flow blocked, maxSuccessQps:") + to_string(node_.maxSuccessQps()) +
+                        string(" currentThreadNum:") + to_string(node_.curThreadNum()) +
+                        string(" minRt:") + to_string(node_.minRt()));
+    return FilterHeadersStatus::StopIteration;
+  }
   return FilterHeadersStatus::Continue;
 };
 FilterDataStatus DemoFilter::decodeData(Buffer::Instance&, bool) {
@@ -41,20 +61,21 @@ void DemoFilter::setDecoderFilterCallbacks(StreamDecoderFilterCallbacks& callbac
 }
 
 // encode stream filter
-Http::FilterHeadersStatus DemoFilter::encodeHeaders(Http::ResponseHeaderMap&, bool) {
+Http::FilterHeadersStatus DemoFilter::encodeHeaders(Http::ResponseHeaderMap& respHeaders,
+                                                    bool status) {
   auto end_time = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
   auto rt = end_time - start_time;
 
   ostringstream result;
   result << "start time:" << std::to_string(start_time) << ","
          << "end time:" << end_time << ","
-         << "rt:" << std::to_string(rt);
+         << "rt:" << std::to_string(rt) << " resp headers:" << respHeaders << " status:" << status;
   ENVOY_LOG(trace, result.str());
-  node_.addPassRequest(1);
   node_.addRtAndSuccess(rt, 1);
-
-  ENVOY_LOG(trace, string("minRt:") + to_string(node_.minRt()) + string(" avgRt:") +
-                       to_string(long(node_.avgRt())));
+  node_.decreaseThreadNum();
+  ENVOY_LOG(info, string("minRt:") + to_string(node_.minRt()) + string(" avgRt:") +
+                      to_string(long(node_.avgRt())) + string(" passQps:") +
+                      to_string(node_.passQps()));
   return FilterHeadersStatus::Continue;
 }
 Http::FilterDataStatus DemoFilter::encodeData(Buffer::Instance&, bool) {

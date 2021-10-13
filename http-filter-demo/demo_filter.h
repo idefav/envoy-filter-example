@@ -48,7 +48,7 @@ public:
   FilterDataStatus decodeData(Buffer::Instance&, bool) override;
   void setDecoderFilterCallbacks(StreamDecoderFilterCallbacks& callbacks) override;
 
-  Http::FilterHeadersStatus encodeHeaders(Http::ResponseHeaderMap&, bool) override;
+  Http::FilterHeadersStatus encodeHeaders(Http::ResponseHeaderMap& respHeaders, bool status) override;
   Http::FilterDataStatus encodeData(Buffer::Instance&, bool) override;
   void setEncoderFilterCallbacks(Http::StreamEncoderFilterCallbacks& callbacks) override;
 

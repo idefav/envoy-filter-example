@@ -9,12 +9,12 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/bazel-bin/envoy",
-            "args": ["-c", "/home/idefav/envoy-httpfilter.yaml", "--concurrency", "10","-l","info"],
+            "args": ["-c", "/home/idefav/envoy-httpfilter.yaml", "--concurrency", "1","-l","info"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
-            // "sourceFileMap":{
-            //     "/proc/self/cwd/external": "${workspaceFolder}"
-            // },
+            "sourceFileMap":{
+                "/proc/self/cwd/external/envoy": "${workspaceFolder}/envoy"
+            },
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",

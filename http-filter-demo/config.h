@@ -6,6 +6,9 @@
 #include "demo_filter.h"
 #include "envoy/server/factory_context.h"
 #include "source/extensions/filters/http/common/factory_base.h"
+#include "stastic_node.h"
+
+using namespace Envoy::Http;
 
 namespace Envoy{
 namespace Server{

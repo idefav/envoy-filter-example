@@ -18,10 +18,18 @@ namespace Http {
 
 // constructor for DemoConfig
 DemoConfig::DemoConfig(const demo::DemoProp& proto_config, const LocalInfo::LocalInfo& local_info)
-    : cluster_(proto_config.cluster()), enable_(proto_config.enable()), local_info_(local_info) {}
+    : cluster_(proto_config.cluster()), enable_(proto_config.enable()), local_info_(local_info) {
+  node_ = make_shared<StasticNode>();
+}
 
 // DemoFilter
 void DemoFilter::onDestroy() {}
+
+void DemoFilter::complete(){
+  decoder_callbacks_->sendLocalReply(Http::Code::InternalServerError, "limited", nullptr,
+                                 absl::nullopt, "limited err");
+  decoder_callbacks_->streamInfo().setResponseFlag(StreamInfo::ResponseFlag::RateLimitServiceError);
+}
 
 // decode stream filter
 FilterHeadersStatus DemoFilter::decodeHeaders(RequestHeaderMap&, bool) {
@@ -31,24 +39,26 @@ FilterHeadersStatus DemoFilter::decodeHeaders(RequestHeaderMap&, bool) {
   // resp",nullptr,absl::nullopt,"to many req");
   std::cout << static_cast<void*>(this) << endl;
   start_time = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-  ENVOY_LOG(info, string("minRt:") + to_string(node_.minRt()) + string(" avgRt:") +
-                      to_string(long(node_.avgRt())) + string(" passQps:") +
-                      to_string(node_.passQps()));
+  ENVOY_LOG(info, string("minRt:") + to_string(config_->node()->minRt()) + string(" avgRt:") +
+                      to_string(long(config_->node()->avgRt())) + string(" passQps:") +
+                      to_string(config_->node()->passQps())+string(" currThreadNum:"+to_string(config_->node()->curThreadNum())));
   ENVOY_LOG(trace, "start time:" + std::to_string(start_time));
-  if (node_.passQps() > 1) {
-    ENVOY_LOG(warn, "blocked! passQps:" + to_string(node_.passQps()));
-    return FilterHeadersStatus::StopIteration;
-  }
+  // if (config_->node()->passQps() > 1) {
+  //   ENVOY_LOG(warn, "blocked! passQps:" + to_string(config_->node()->passQps()));
+  //   this->complete();
+  //   return FilterHeadersStatus::StopIteration;
+  // }
+  config_->node()->increaseThreadNum();
+  config_->node()->addPassRequest(1);
   node_.increaseThreadNum();
   node_.addPassRequest(1);
-  ENVOY_LOG(info, string("flow blocked, maxSuccessQps:") + to_string(node_.maxSuccessQps()) +
-                      string(" currentThreadNum:") + to_string(node_.curThreadNum()) +
-                      string(" minRt:") + to_string(node_.minRt()));
-  if (node_.curThreadNum() > 1 &&
-      node_.curThreadNum() > (node_.maxSuccessQps() * node_.minRt() / 1000)) {
-    ENVOY_LOG(warn, string("flow blocked, maxSuccessQps:") + to_string(node_.maxSuccessQps()) +
-                        string(" currentThreadNum:") + to_string(node_.curThreadNum()) +
-                        string(" minRt:") + to_string(node_.minRt()));
+
+  if (config_->node()->curThreadNum() > 1 &&
+      config_->node()->curThreadNum() > (config_->node()->maxSuccessQps() * config_->node()->minRt() / 1000)) {
+    ENVOY_LOG(warn, string("flow blocked, maxSuccessQps:") + to_string(config_->node()->maxSuccessQps()) +
+                        string(" currentThreadNum:") + to_string(config_->node()->curThreadNum()) +
+                        string(" minRt:") + to_string(config_->node()->minRt()));
+    this->complete();
     return FilterHeadersStatus::StopIteration;
   }
   return FilterHeadersStatus::Continue;
@@ -71,11 +81,13 @@ Http::FilterHeadersStatus DemoFilter::encodeHeaders(Http::ResponseHeaderMap& res
          << "end time:" << end_time << ","
          << "rt:" << std::to_string(rt) << " resp headers:" << respHeaders << " status:" << status;
   ENVOY_LOG(trace, result.str());
+  config_->node()->addRtAndSuccess(rt, 1);
+  config_->node()->decreaseThreadNum();
   node_.addRtAndSuccess(rt, 1);
   node_.decreaseThreadNum();
-  ENVOY_LOG(info, string("minRt:") + to_string(node_.minRt()) + string(" avgRt:") +
-                      to_string(long(node_.avgRt())) + string(" passQps:") +
-                      to_string(node_.passQps()));
+  ENVOY_LOG(info, string("minRt:") + to_string(config_->node()->minRt()) + string(" avgRt:") +
+                      to_string(long(config_->node()->avgRt())) + string(" passQps:") +
+                      to_string(config_->node()->passQps()));
   return FilterHeadersStatus::Continue;
 }
 Http::FilterDataStatus DemoFilter::encodeData(Buffer::Instance&, bool) {

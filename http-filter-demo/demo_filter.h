@@ -23,10 +23,13 @@ public:
 
   const LocalInfo::LocalInfo& localInfo() const { return local_info_; }
 
+  shared_ptr<StasticNode> node() { return node_; }
+
 private:
   const std::string cluster_;
   const bool enable_;
   const LocalInfo::LocalInfo& local_info_;
+  shared_ptr<StasticNode> node_;
 };
 
 using DemoFilterShardConfigPtr = std::shared_ptr<DemoConfig>;
@@ -48,7 +51,8 @@ public:
   FilterDataStatus decodeData(Buffer::Instance&, bool) override;
   void setDecoderFilterCallbacks(StreamDecoderFilterCallbacks& callbacks) override;
 
-  Http::FilterHeadersStatus encodeHeaders(Http::ResponseHeaderMap& respHeaders, bool status) override;
+  Http::FilterHeadersStatus encodeHeaders(Http::ResponseHeaderMap& respHeaders,
+                                          bool status) override;
   Http::FilterDataStatus encodeData(Buffer::Instance&, bool) override;
   void setEncoderFilterCallbacks(Http::StreamEncoderFilterCallbacks& callbacks) override;
 
@@ -61,6 +65,7 @@ private:
   LowerCaseString cluster() const;
   bool enable() const;
   DemoConfig demoConfig() const;
+  void complete();
 };
 } // namespace Http
 } // namespace Envoy

@@ -16,7 +16,8 @@ namespace Envoy {
         shared_ptr<WindowWrap<MetricBucket>> BucketLeapArray::resetWindowTo(shared_ptr<WindowWrap<MetricBucket>> w,
                                                                             long startTime) {
             w->resetTo(startTime);
-            w->value().reset();
+            const shared_ptr<MetricBucket> &ptr = w->value();
+            ptr->reset();
             return w;
         }
     } // namespace Http
